@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bizintel-ai"
+version = "0.1.0"
+description = "Evidence-backed agentic business analytics platform"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "python-multipart>=0.0.20,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9", "httpx>=0.28,<1", "ruff>=0.9,<1"]
+documents = ["pymupdf>=1.25,<2", "python-docx>=1.1,<2", "openpyxl>=3.1,<4", "pandas>=2.2,<4"]
+agents = ["langgraph>=0.2,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend", "apps"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
