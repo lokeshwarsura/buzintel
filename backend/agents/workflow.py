@@ -1,26 +1,31 @@
-"""A deterministic, bounded initial investigation workflow.
-
-The graph adapter is intentionally deferred until LangGraph is installed; these nodes
-are directly testable and will become LangGraph nodes without duplicating logic.
-"""
+"""Investigation workflow coordinator delegating to single-agent or hierarchical multi-agent supervisor."""
 
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from sqlalchemy.orm import Session
+
+from backend.agents.supervisor import run_supervisor
 from backend.analytics.execution import metric_evidence
 from backend.ingestion.service import document_store
 from backend.models import Finding, InvestigationReport, InvestigationRequest, Recommendation
 
 
-def run_investigation(request: InvestigationRequest, workspace_id: str) -> InvestigationReport:
+def run_investigation(
+    request: InvestigationRequest,
+    workspace_id: str,
+    session: Session | None = None,
+) -> InvestigationReport:
+    """Run an investigation with the requested execution mode (single or multi-agent)."""
+    if request.mode == "multi":
+        return run_supervisor(request, workspace_id, session=session)
+
+    # Single-agent bounded investigation
     investigation_id, trace_id = str(uuid4()), str(uuid4())
     evidence = metric_evidence(workspace_id)
-    document_evidence = document_store.search(workspace_id, request.question)
-    if request.mode == "multi":
-        # Supervisor combines only outputs from the same controlled tool layer.
-        evidence.extend(document_evidence)
-    else:
-        evidence.extend(document_evidence[:3])
+    document_evidence = document_store.search(workspace_id, request.question, session=session)
+    evidence.extend(document_evidence[:3])
+
     growth = next(item for item in evidence if item.evidence_id == "metric:growth:jan-mar")
     margin = next(item for item in evidence if item.evidence_id == "metric:margin:2026-q1")
     findings = [
@@ -32,7 +37,7 @@ def run_investigation(request: InvestigationRequest, workspace_id: str) -> Inves
             Finding(
                 statement="Relevant authorized document passages were retrieved; they are supporting context, not proof of causation.",
                 status="confirmed",
-                evidence_ids=[item.evidence_id for item in document_evidence],
+                evidence_ids=[item.evidence_id for item in document_evidence[:3]],
             )
         )
     recommendations = [
