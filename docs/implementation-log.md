@@ -7,6 +7,14 @@
 - Added dependency contract, safe environment example, backend module layout, deterministic analytics primitives, SQL read-only validation, health/readiness endpoint skeleton, and unit tests.
 - No packages, databases, models, containers, or external services were installed or started.
 
+## 2026-10-23 — persistence checkpoint
+
+- Installed project dependencies including Alembic; Python 3.14 is supported by the installed package versions.
+- Added SQLAlchemy user/workspace/membership models and a tested SQLite development schema path.
+- Added scrypt password hashing primitives and tests.
+- Latest verified result: 17 tests passed before the database integration regression test added in this checkpoint.
+- GitHub publishing remains blocked: `gh` is not installed and no authenticated remote exists. Docker, PostgreSQL, and Ollama are absent.
+
 ## Completion checklist
 
 - [x] Deterministic analytics, local document retrieval, bounded reports and API foundation.
