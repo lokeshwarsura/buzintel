@@ -30,6 +30,7 @@ packages = ["backend", "apps"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "-p no:langsmith"
 
 [tool.ruff]
 line-length = 100
