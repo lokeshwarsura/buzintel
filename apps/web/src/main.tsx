@@ -1,27 +1,157 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { fetchReadiness } from "./api";
+import { Dashboard } from "./pages/Dashboard";
+import { EvaluationLab } from "./pages/EvaluationLab";
+import { InvestigationWorkspace } from "./pages/InvestigationWorkspace";
+import { KnowledgeBase } from "./pages/KnowledgeBase";
+import { TraceViewer } from "./pages/TraceViewer";
 import "./styles.css";
 
-type Report = { executive_summary: string; findings: { statement: string; status: string }[]; recommendations: { priority: number; action: string; rationale: string }[]; limitations: string[]; trace_id: string };
-
 function App() {
-  const [question, setQuestion] = useState("Revenue declined this quarter. Investigate the trend and recommend actions.");
-  const [mode, setMode] = useState("single");
-  const [workspace, setWorkspace] = useState("demo-workspace");
-  const [report, setReport] = useState<Report>();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  async function investigate() {
-    setLoading(true); setError("");
-    try {
-      const response = await fetch("/api/v1/investigations", { method: "POST", headers: { "Content-Type": "application/json", "X-Workspace-ID": workspace }, body: JSON.stringify({ question, mode }) });
-      if (!response.ok) throw new Error((await response.json()).detail || "Investigation failed");
-      setReport(await response.json());
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Investigation failed"); }
-    finally { setLoading(false); }
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [workspaceId, setWorkspaceId] = useState("default");
+  const [prefilledQuestion, setPrefilledQuestion] = useState<string | undefined>();
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
+  const [dbStatus, setDbStatus] = useState("checking");
+
+  useEffect(() => {
+    async function checkHealth() {
+      try {
+        const res = await fetchReadiness();
+        setDbStatus(res.database === "connected" ? "connected" : "ready");
+      } catch {
+        setDbStatus("offline");
+      }
+    }
+    checkHealth();
+  }, []);
+
+  function handleNavigate(tab: string, question?: string) {
+    if (question) {
+      setPrefilledQuestion(question);
+    }
+    setActiveTab(tab);
   }
-  return <main><header><p className="eyebrow">BIZINTEL AI</p><h1>Decision intelligence, with evidence.</h1><p>Local demo mode uses synthetic business data and clearly labels its limitations.</p></header>
-  <section className="panel"><label>Workspace<input value={workspace} onChange={e => setWorkspace(e.target.value)} /></label><label>Investigation question<textarea value={question} onChange={e => setQuestion(e.target.value)} /></label><label>Workflow<select value={mode} onChange={e => setMode(e.target.value)}><option value="single">Single agent</option><option value="multi">Supervisor workflow</option></select></label><button onClick={investigate} disabled={loading}>{loading ? "Investigating…" : "Start investigation"}</button>{error && <p className="error">{error}</p>}</section>
-  {report && <section className="report"><p className="trace">Trace {report.trace_id}</p><h2>Executive summary</h2><p>{report.executive_summary}</p><h2>Findings</h2>{report.findings.map((f,i) => <article key={i}><span>{f.status}</span>{f.statement}</article>)}<h2>Prioritized actions</h2>{report.recommendations.map(r => <article key={r.priority}><strong>{r.priority}. {r.action}</strong><p>{r.rationale}</p></article>)}<h2>Limitations</h2><ul>{report.limitations.map(item => <li key={item}>{item}</li>)}</ul></section>}</main>;
+
+  function handleViewTrace(investigationId: string) {
+    setSelectedTraceId(investigationId);
+    setActiveTab("trace");
+  }
+
+  return (
+    <div className="app-container">
+      {/* Sidebar Navigation */}
+      <aside className="sidebar">
+        <div className="brand-header">
+          <div className="brand-logo">BI</div>
+          <div>
+            <div className="brand-title">BizIntel AI</div>
+            <div className="brand-subtitle">Decision Intelligence</div>
+          </div>
+        </div>
+
+        <nav className="nav-menu">
+          <button
+            className={`nav-item ${activeTab === "dashboard" ? "active" : ""}`}
+            onClick={() => setActiveTab("dashboard")}
+          >
+            <span>📊</span>
+            <span>Executive Dashboard</span>
+          </button>
+
+          <button
+            className={`nav-item ${activeTab === "investigation" ? "active" : ""}`}
+            onClick={() => setActiveTab("investigation")}
+          >
+            <span>🔍</span>
+            <span>AI Investigation</span>
+          </button>
+
+          <button
+            className={`nav-item ${activeTab === "knowledge" ? "active" : ""}`}
+            onClick={() => setActiveTab("knowledge")}
+          >
+            <span>📚</span>
+            <span>Knowledge Base</span>
+          </button>
+
+          <button
+            className={`nav-item ${activeTab === "trace" ? "active" : ""}`}
+            onClick={() => setActiveTab("trace")}
+          >
+            <span>⚡</span>
+            <span>Agent Trace Viewer</span>
+          </button>
+
+          <button
+            className={`nav-item ${activeTab === "evaluation" ? "active" : ""}`}
+            onClick={() => setActiveTab("evaluation")}
+          >
+            <span>🧪</span>
+            <span>Evaluation Laboratory</span>
+          </button>
+        </nav>
+
+        {/* Workspace & System Indicator */}
+        <div className="workspace-badge">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="workspace-badge-label">Active Workspace</span>
+            <span
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: dbStatus === "connected" ? "var(--accent-emerald)" : "var(--accent-amber)",
+              }}
+              title={`Database status: ${dbStatus}`}
+            />
+          </div>
+          <div className="workspace-badge-name">{workspaceId}</div>
+          <input
+            className="input"
+            style={{ fontSize: "11px", padding: "4px 8px", marginTop: "8px" }}
+            value={workspaceId}
+            onChange={(e) => setWorkspaceId(e.target.value.trim() || "default")}
+            placeholder="Switch Workspace"
+          />
+        </div>
+      </aside>
+
+      {/* Main Page Content */}
+      <main className="main-content">
+        {activeTab === "dashboard" && (
+          <Dashboard workspaceId={workspaceId} onNavigate={handleNavigate} />
+        )}
+
+        {activeTab === "investigation" && (
+          <InvestigationWorkspace
+            workspaceId={workspaceId}
+            initialQuestion={prefilledQuestion}
+            onViewTrace={handleViewTrace}
+          />
+        )}
+
+        {activeTab === "knowledge" && (
+          <KnowledgeBase workspaceId={workspaceId} />
+        )}
+
+        {activeTab === "trace" && (
+          <TraceViewer
+            workspaceId={workspaceId}
+            selectedInvestigationId={selectedTraceId}
+          />
+        )}
+
+        {activeTab === "evaluation" && (
+          <EvaluationLab workspaceId={workspaceId} />
+        )}
+      </main>
+    </div>
+  );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+
+const rootEl = document.getElementById("root");
+if (rootEl) {
+  createRoot(rootEl).render(<App />);
+}
