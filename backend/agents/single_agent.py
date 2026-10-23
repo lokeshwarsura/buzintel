@@ -2,11 +2,14 @@
 
 from typing import TypedDict
 
-from langgraph.graph import END, START, StateGraph
+try:  # Windows Application Control may block LangGraph's optional uuid-utils extension.
+    from langgraph.graph import END, START, StateGraph
+except ImportError:  # pragma: no cover - depends on host application-control policy
+    END = START = StateGraph = None
 
 from backend.analytics.execution import metric_evidence
 from backend.ingestion.service import document_store
-from backend.models import Evidence, InvestigationRequest, InvestigationReport
+from backend.models import Evidence, InvestigationReport, InvestigationRequest
 
 
 class SingleAgentState(TypedDict, total=False):
@@ -35,6 +38,8 @@ def synthesize(state: SingleAgentState) -> SingleAgentState:
 
 
 def build_single_agent_graph():
+    if StateGraph is None:
+        return None
     graph = StateGraph(SingleAgentState)
     graph.add_node("collect_metrics", collect_metrics)
     graph.add_node("collect_documents", collect_documents)
@@ -47,5 +52,13 @@ def build_single_agent_graph():
 
 
 def run_single_agent(request: InvestigationRequest, workspace_id: str) -> InvestigationReport:
-    result = build_single_agent_graph().invoke({"request": request, "workspace_id": workspace_id})
+    graph = build_single_agent_graph()
+    if graph is None:
+        # Same bounded node sequence, retained only as an environment-compatible fallback.
+        state: SingleAgentState = {"request": request, "workspace_id": workspace_id}
+        state.update(collect_metrics(state))
+        state.update(collect_documents(state))
+        state.update(synthesize(state))
+        return state["report"]
+    result = graph.invoke({"request": request, "workspace_id": workspace_id})
     return result["report"]
