@@ -17,5 +17,5 @@ def test_document_search_never_crosses_workspace_boundary() -> None:
 
 
 def test_ingestion_rejects_unsupported_type() -> None:
-    with pytest.raises(ValueError, match="TXT"):
-        DocumentStore().ingest("alpha", "report.pdf", b"not a pdf")
+    with pytest.raises(ValueError, match="Supported"):
+        DocumentStore().ingest("alpha", "report.exe", b"not a document")
