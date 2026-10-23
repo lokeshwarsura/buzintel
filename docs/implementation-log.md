@@ -30,6 +30,6 @@ Implement persistent document/chunk storage metadata and a PostgreSQL/pgvector m
 
 ## Next
 
-1. Add PDF, DOCX, CSV and XLSX parsing with stable chunk provenance.
-2. Add lexical plus configurable vector retrieval fallback and retrieval tests.
-3. Provision PostgreSQL with pgvector and separate application/analytics roles when available.
+1. Persist investigation reports, agent steps, traces, and audit events.
+2. Add an Alembic initial migration and PostgreSQL/pgvector deployment configuration.
+3. Build the dashboard, knowledge base, traces and evaluation frontend pages.
