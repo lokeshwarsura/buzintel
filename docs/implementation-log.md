@@ -26,7 +26,7 @@
 
 ## Current task
 
-Implement complete multi-format document parsing, chunking, and hybrid retrieval fallback. PostgreSQL/pgvector remains blocked by missing local services.
+Implement persistent document/chunk storage metadata and a PostgreSQL/pgvector migration path. PostgreSQL/pgvector remains blocked by missing local services.
 
 ## Next
 
