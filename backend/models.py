@@ -47,3 +47,12 @@ class InvestigationRequest(BaseModel):
     question: str = Field(min_length=3, max_length=2_000)
     mode: Literal["single", "multi"] = "single"
     reporting_period: str | None = Field(default=None, max_length=64)
+
+
+class Credentials(BaseModel):
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=12, max_length=256)
+
+
+class WorkspaceCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)

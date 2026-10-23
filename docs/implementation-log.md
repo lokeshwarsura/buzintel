@@ -12,24 +12,24 @@
 - Installed project dependencies including Alembic; Python 3.14 is supported by the installed package versions.
 - Added SQLAlchemy user/workspace/membership models and a tested SQLite development schema path.
 - Added scrypt password hashing primitives and tests.
-- Latest verified result: 17 tests passed before the database integration regression test added in this checkpoint.
-- GitHub publishing remains blocked: `gh` is not installed and no authenticated remote exists. Docker, PostgreSQL, and Ollama are absent.
+- Latest verified result: 19 tests passed, including SQLite schema and authenticated API lifecycle checks.
+- GitHub remote is configured and `main` is published to `https://github.com/lokeshwarsura/buzintel`.
 
 ## Completion checklist
 
 - [x] Deterministic analytics, local document retrieval, bounded reports and API foundation.
 - [x] Unit tests and local independent Git commits.
-- [ ] Persistent database schema and authenticated API.
+- [x] SQLite development schema, password hashing, persistent sessions, and workspace-authenticated API.
 - [ ] Full parsers and hybrid/vector retrieval.
 - [ ] Multi-agent orchestration and persistent traces.
 - [ ] Evaluation benchmark, full frontend, deployment and GitHub remote.
 
 ## Current task
 
-Implement a SQLite development persistence adapter, password hashing, and workspace ownership primitives. PostgreSQL/pgvector remains blocked by missing local services.
+Implement complete multi-format document parsing, chunking, and hybrid retrieval fallback. PostgreSQL/pgvector remains blocked by missing local services.
 
 ## Next
 
-1. Create and install the Python virtual environment dependencies.
-2. Provision PostgreSQL with pgvector and separate application/analytics roles.
-3. Add SQLAlchemy models, Alembic migration, seeded synthetic business data, and integration tests.
+1. Add PDF, DOCX, CSV and XLSX parsing with stable chunk provenance.
+2. Add lexical plus configurable vector retrieval fallback and retrieval tests.
+3. Provision PostgreSQL with pgvector and separate application/analytics roles when available.
